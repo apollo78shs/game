@@ -2,208 +2,107 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport"
-content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
 <title>Mobile Open World Game</title>
-
 <style>
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-}
-
-html,body{
-width:100%;
-height:100%;
-overflow:hidden;
-background:black;
-font-family:Arial,sans-serif;
-touch-action:none;
-}
-
-canvas{
-display:block;
-}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:Arial,sans-serif;touch-action:none;user-select:none;-webkit-user-select:none}
+canvas{display:block}
 
 #ui{
-position:absolute;
-top:10px;
-left:10px;
-width:280px;
-background:rgba(0,0,0,0.75);
-padding:14px;
-border-radius:14px;
-color:white;
-z-index:10;
-backdrop-filter:blur(10px);
+    position:absolute;top:10px;left:10px;width:min(320px,calc(100vw - 20px));
+    background:rgba(0,0,0,.74);padding:14px;border-radius:16px;color:#fff;z-index:20;
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)
 }
-
-input{
-width:100%;
-margin:8px 0;
+#ui h2{font-size:18px;margin-bottom:10px}
+#ui label{display:block;font-size:13px;margin-top:8px}
+#ui input{width:100%;margin:4px 0 10px}
+#ui button, #jump, #attack{
+    border:none;border-radius:999px;color:#fff;font-weight:700;letter-spacing:.3px
 }
-
-button{
-width:100%;
-padding:12px;
-border:none;
-border-radius:12px;
-background:#0099ff;
-color:white;
-font-weight:bold;
-margin-top:10px;
-}
+#ui button{width:100%;padding:12px;background:#0099ff;font-size:16px;margin-top:10px}
 
 #loadingScreen{
-position:absolute;
-inset:0;
-background:black;
-display:none;
-justify-content:center;
-align-items:center;
-flex-direction:column;
-color:white;
-z-index:100;
+    position:absolute;inset:0;background:#000;display:none;justify-content:center;align-items:center;flex-direction:column;color:#fff;z-index:100
 }
-
-#loadingBar{
-width:300px;
-height:24px;
-background:#222;
-border-radius:20px;
-overflow:hidden;
-margin-top:20px;
-}
-
-#loadingFill{
-width:0%;
-height:100%;
-background:#00aaff;
-}
+#loadingText{font-size:24px}
+#loadingBar{width:min(320px,80vw);height:22px;background:#222;border-radius:999px;overflow:hidden;margin-top:18px}
+#loadingFill{width:0%;height:100%;background:#00aaff}
 
 #joystick{
-position:absolute;
-left:max(20px, env(safe-area-inset-left));
-bottom:max(20px, env(safe-area-inset-bottom));
-width:140px;
-height:140px;
-border-radius:50%;
-background:rgba(255,255,255,0.08);
-z-index:30;
+    position:absolute;left:max(20px, env(safe-area-inset-left));bottom:max(20px, env(safe-area-inset-bottom));
+    width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.08);z-index:30;touch-action:none
 }
-
 #stick{
-position:absolute;
-left:40px;
-top:40px;
-width:60px;
-height:60px;
-border-radius:50%;
-background:rgba(255,255,255,0.5);
+    position:absolute;left:40px;top:40px;width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.5)
 }
-
 #cameraPad{
-position:absolute;
-right:0;
-top:0;
-width:50%;
-height:100%;
-z-index:25;
+    position:absolute;right:0;top:0;width:50%;height:100%;z-index:25;touch-action:none
 }
-
 #jump{
-position:absolute;
-right:max(25px, env(safe-area-inset-right));
-bottom:max(40px, env(safe-area-inset-bottom));
-width:90px;
-height:90px;
-border:none;
-border-radius:50%;
-background:rgba(0,150,255,0.75);
-color:white;
-font-size:20px;
-font-weight:bold;
-z-index:30;
+    position:absolute;right:max(25px, env(safe-area-inset-right));bottom:max(40px, env(safe-area-inset-bottom));
+    width:88px;height:88px;background:rgba(0,150,255,.78);z-index:30;font-size:18px
 }
-
 #attack{
-position:absolute;
-right:130px;
-bottom:55px;
-width:85px;
-height:85px;
-border:none;
-border-radius:50%;
-background:rgba(255,50,50,0.8);
-color:white;
-font-size:16px;
-font-weight:bold;
-z-index:30;
+    position:absolute;right:126px;bottom:54px;width:86px;height:86px;background:rgba(255,65,65,.82);
+    z-index:30;font-size:15px
+}
+#crosshair{
+    position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:34px;height:34px;z-index:40;pointer-events:none;
+    opacity:.95;filter:drop-shadow(0 0 8px rgba(0,255,255,.35))
+}
+#crosshair::before,#crosshair::after{
+    content:"";position:absolute;background:rgba(160,255,255,.95);border-radius:999px
+}
+#crosshair::before{left:50%;top:0;width:2px;height:34px;transform:translateX(-50%)}
+#crosshair::after{top:50%;left:0;height:2px;width:34px;transform:translateY(-50%)}
+#crosshair i{
+    position:absolute;left:50%;top:50%;width:8px;height:8px;border-radius:50%;background:#fff;transform:translate(-50%,-50%)
 }
 
-@media screen and (orientation:landscape){
-
-body::before{
-content:"Rotate Phone Vertically";
-position:fixed;
-inset:0;
-background:black;
-color:white;
-display:flex;
-justify-content:center;
-align-items:center;
-font-size:32px;
-z-index:99999;
+/* Portrait warning: this game is designed for landscape */
+#rotateHint{
+    display:none;position:fixed;inset:0;background:#000;color:#fff;z-index:99999;align-items:center;justify-content:center;
+    text-align:center;padding:24px;font-size:20px;line-height:1.4
 }
-
+#rotateHint span{display:block;opacity:.85;font-size:15px;margin-top:12px}
+@media screen and (orientation:portrait){
+    #rotateHint{display:flex}
 }
 </style>
 </head>
-
 <body>
 
+<div id="rotateHint">
+    Rotate your phone to landscape for easier play.
+    <span>Best experience: landscape + fullscreen</span>
+</div>
+
 <div id="ui">
-
-<h2>Upload Assets 1.0</h2>
-
-<label>Map (.glb)</label>
-<input type="file" id="mapInput" accept=".glb">
-
-<label>Player (.glb)</label>
-<input type="file" id="playerInput" accept=".glb">
-
-<label>Enemy (.glb)</label>
-<input type="file" id="enemyInput" accept=".glb">
-
-<label>NPC (.glb)</label>
-<input type="file" id="npcInput" accept=".glb">
-
-<button id="startBtn">START GAME</button>
-
+    <h2>Upload Assets1. 1</h2>
+    <label>Map (.glb)</label>
+    <input type="file" id="mapInput" accept=".glb">
+    <label>Player (.glb)</label>
+    <input type="file" id="playerInput" accept=".glb">
+    <label>Enemy (.glb)</label>
+    <input type="file" id="enemyInput" accept=".glb">
+    <label>NPC (.glb)</label>
+    <input type="file" id="npcInput" accept=".glb">
+    <button id="startBtn">START GAME</button>
 </div>
 
 <div id="loadingScreen">
-
-<div id="loadingText">Loading 0%</div>
-
-<div id="loadingBar">
-<div id="loadingFill"></div>
+    <div id="loadingText">Loading 0%</div>
+    <div id="loadingBar"><div id="loadingFill"></div></div>
 </div>
 
-</div>
+<div id="crosshair"><i></i></div>
 
-<div id="joystick">
-<div id="stick"></div>
-</div>
-
+<div id="joystick"><div id="stick"></div></div>
 <div id="cameraPad"></div>
-
 <button id="jump">JUMP</button>
 <button id="attack">ATTACK</button>
 
@@ -212,524 +111,592 @@ z-index:99999;
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/SkeletonUtils.js"></script>
 
 <script>
-
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87ceeb);
+scene.fog = new THREE.Fog(0x87ceeb, 50, 300);
 
-const camera = new THREE.PerspectiveCamera(
-75,
-window.innerWidth/window.innerHeight,
-0.1,
-5000
-);
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 5000);
+camera.position.set(0, 3, 5);
 
-const renderer = new THREE.WebGLRenderer({
-antialias:false,
-powerPreference:"high-performance"
-});
-
-renderer.setSize(window.innerWidth,window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio,1.5));
-
+const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance" });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
 document.body.appendChild(renderer.domElement);
 
-scene.add(new THREE.HemisphereLight(0xffffff,0x444444,1.5));
-
-const sun = new THREE.DirectionalLight(0xffffff,2);
-sun.position.set(20,40,20);
+scene.add(new THREE.HemisphereLight(0xbfe8ff, 0x4a4422, 1.5));
+const sun = new THREE.DirectionalLight(0xffffff, 2.6);
+sun.position.set(40, 80, 20);
+sun.castShadow = true;
+sun.shadow.mapSize.width = 2048;
+sun.shadow.mapSize.height = 2048;
 scene.add(sun);
+scene.add(new THREE.PointLight(0x5ca8ff, 1.0, 220, 2));
+scene.add(new THREE.PointLight(0xffaa55, 0.8, 150, 2));
 
 const loader = new THREE.GLTFLoader();
 const clock = new THREE.Clock();
+const raycaster = new THREE.Raycaster();
+const tmpVec3 = new THREE.Vector3();
+const tmpDir = new THREE.Vector3();
+const tmpMat = new THREE.Matrix4();
 
-let player;
-let playerMixer;
-
-let idleAction;
-let walkAction;
-let attackAction;
-let currentAction;
+let map = null;
+let player = null;
+let playerMixer = null;
+let idleAction = null;
+let walkAction = null;
+let attackAction = null;
+let currentAction = null;
+let playerClips = [];
 
 let enemies = [];
 let enemyMixers = [];
+let enemyRoots = [];
+let enemyMeshToRoot = new Map();
 
-let npc;
+let npc = null;
+let npcMixer = null;
 
 let mapColliders = [];
 
-let moveForward = 0;
-let moveSide = 0;
-
 let velocityY = 0;
 let grounded = false;
-let isAttacking = false;
-
+let moveForward = 0;
+let moveSide = 0;
 let cameraYaw = 0;
-let cameraPitch = 0.2;
+let cameraPitch = 0.18;
+let isAttacking = false;
+let aimLocked = false;
 
-const raycaster = new THREE.Raycaster();
+const footOffset = 0.02;
 
-function fadeToAction(action,duration=0.2){
+const loadingScreen = document.getElementById("loadingScreen");
+const loadingText = document.getElementById("loadingText");
+const loadingFill = document.getElementById("loadingFill");
 
-if(currentAction === action) return;
-
-if(currentAction){
-
-currentAction.fadeOut(duration);
-
-}
-
-action.reset().fadeIn(duration).play();
-
-currentAction = action;
+function setLoading(percent){
+    const p = Math.max(0, Math.min(100, Math.floor(percent)));
+    loadingText.textContent = "Loading " + p + "%";
+    loadingFill.style.width = p + "%";
 }
 
 function collectColliders(root){
-
-const arr = [];
-
-root.traverse(o=>{
-
-if(o.isMesh){
-
-o.castShadow = true;
-o.receiveShadow = true;
-
-arr.push(o);
-
+    const arr = [];
+    root.traverse(obj => {
+        if (obj.isMesh) {
+            obj.castShadow = true;
+            obj.receiveShadow = true;
+            arr.push(obj);
+        }
+    });
+    return arr;
 }
 
-});
-
-return arr;
+function normalizeCharacterToFeet(model){
+    model.updateWorldMatrix(true, true);
+    const box = new THREE.Box3().setFromObject(model);
+    model.position.y -= box.min.y;
+    model.updateWorldMatrix(true, true);
 }
 
-function getGroundHit(x,z,startY){
-
-raycaster.set(
-new THREE.Vector3(x,startY,z),
-new THREE.Vector3(0,-1,0)
-);
-
-const hits = raycaster.intersectObjects(mapColliders,true);
-
-return hits.length ? hits[0] : null;
+function getGroundHit(x, z, startY){
+    if (!mapColliders.length) return null;
+    raycaster.set(new THREE.Vector3(x, startY, z), new THREE.Vector3(0, -1, 0));
+    raycaster.far = 1000;
+    const hits = raycaster.intersectObjects(mapColliders, true);
+    return hits.length ? hits[0] : null;
 }
 
 function snapObjectToGround(object){
-
-const hit = getGroundHit(
-object.position.x,
-object.position.z,
-object.position.y + 50
-);
-
-if(hit){
-
-object.position.y = hit.point.y + 0.02;
-
-}
+    if (!object || !mapColliders.length) return;
+    const hit = getGroundHit(object.position.x, object.position.z, object.position.y + 50);
+    if (hit) object.position.y = hit.point.y + footOffset;
 }
 
 function loadModel(file){
-
-return new Promise((resolve,reject)=>{
-
-const url = URL.createObjectURL(file);
-
-loader.load(
-url,
-gltf=>resolve(gltf),
-undefined,
-err=>reject(err)
-);
-
-});
-
+    return new Promise((resolve, reject) => {
+        const url = URL.createObjectURL(file);
+        loader.load(url, gltf => resolve(gltf), undefined, err => reject(err));
+    });
 }
 
-document.getElementById("startBtn").onclick = async ()=>{
-
-if(document.documentElement.requestFullscreen){
-
-document.documentElement.requestFullscreen();
-
+function pickClip(clips, regex, fallbackIndex){
+    if (!clips || !clips.length) return null;
+    const found = clips.find(c => regex.test(c.name || ""));
+    if (found) return found;
+    if (fallbackIndex != null && clips[fallbackIndex]) return clips[fallbackIndex];
+    return clips[0];
 }
 
-const mapFile = document.getElementById("mapInput").files[0];
-const playerFile = document.getElementById("playerInput").files[0];
-const enemyFile = document.getElementById("enemyInput").files[0];
-const npcFile = document.getElementById("npcInput").files[0];
-
-if(!mapFile || !playerFile || !enemyFile || !npcFile){
-
-alert("Upload all GLB files");
-return;
-
+function setAction(action, duration = 0.18){
+    if (!action) return;
+    if (currentAction === action) return;
+    if (currentAction) currentAction.fadeOut(duration);
+    action.reset().fadeIn(duration).play();
+    currentAction = action;
 }
 
-document.getElementById("loadingScreen").style.display = "flex";
-
-const mapGLTF = await loadModel(mapFile);
-scene.add(mapGLTF.scene);
-mapColliders = collectColliders(mapGLTF.scene);
-
-const playerGLTF = await loadModel(playerFile);
-
-player = playerGLTF.scene;
-player.position.set(0,5,0);
-player.rotation.y = Math.PI;
-
-scene.add(player);
-
-if(playerGLTF.animations.length >= 3){
-
-playerMixer = new THREE.AnimationMixer(player);
-
-idleAction = playerMixer.clipAction(playerGLTF.animations[0]);
-walkAction = playerMixer.clipAction(playerGLTF.animations[1]);
-attackAction = playerMixer.clipAction(playerGLTF.animations[2]);
-
-idleAction.play();
-currentAction = idleAction;
-
+function buildEnemyMeshIndex(root){
+    root.traverse(obj => {
+        if (obj.isMesh) {
+            enemyMeshToRoot.set(obj.uuid, root);
+        }
+    });
 }
 
-snapObjectToGround(player);
-
-const enemyGLTF = await loadModel(enemyFile);
-
-for(let i=0;i<5;i++){
-
-const enemy = THREE.SkeletonUtils.clone(enemyGLTF.scene);
-
-enemy.position.set(
-(Math.random()-0.5)*30,
-5,
-(Math.random()-0.5)*30
-);
-
-scene.add(enemy);
-
-enemies.push(enemy);
-
-if(enemyGLTF.animations.length){
-
-const mixer = new THREE.AnimationMixer(enemy);
-
-mixer.clipAction(enemyGLTF.animations[0]).play();
-
-enemyMixers.push(mixer);
-
+function getEnemyFromHitObject(obj){
+    let cur = obj;
+    while (cur) {
+        if (enemyRoots.includes(cur)) return cur;
+        cur = cur.parent;
+    }
+    return enemyMeshToRoot.get(obj.uuid) || null;
 }
 
-snapObjectToGround(enemy);
-
+function removeEnemy(root){
+    const idx = enemies.indexOf(root);
+    if (idx >= 0) {
+        enemies.splice(idx, 1);
+        if (enemyMixers[idx]) enemyMixers.splice(idx, 1);
+        enemyRoots.splice(idx, 1);
+    }
+    root.traverse(obj => {
+        if (obj.isMesh) enemyMeshToRoot.delete(obj.uuid);
+    });
+    scene.remove(root);
 }
 
-const npcGLTF = await loadModel(npcFile);
+function makeLaserBeam(start, end){
+    const dir = new THREE.Vector3().subVectors(end, start);
+    const len = dir.length();
+    if (len < 0.001) return null;
+    const mid = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
 
-npc = npcGLTF.scene;
-npc.position.set(-10,5,15);
+    const group = new THREE.Group();
 
-scene.add(npc);
+    const coreGeo = new THREE.CylinderGeometry(0.035, 0.035, len, 10, 1, true);
+    const glowGeo = new THREE.CylinderGeometry(0.10, 0.10, len, 10, 1, true);
 
-snapObjectToGround(npc);
+    const coreMat = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.95
+    });
 
-document.getElementById("ui").style.display = "none";
-document.getElementById("loadingScreen").style.display = "none";
+    const glowMat = new THREE.MeshBasicMaterial({
+        color: 0x00f0ff,
+        transparent: true,
+        opacity: 0.30,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+    });
 
+    const glow = new THREE.Mesh(glowGeo, glowMat);
+    const core = new THREE.Mesh(coreGeo, coreMat);
+
+    const quat = new THREE.Quaternion();
+    quat.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
+    glow.quaternion.copy(quat);
+    core.quaternion.copy(quat);
+
+    glow.position.copy(mid);
+    core.position.copy(mid);
+
+    group.add(glow);
+    group.add(core);
+
+    const tipGeo = new THREE.SphereGeometry(0.12, 16, 16);
+    const tipMat = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.9,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+    });
+    const tip = new THREE.Mesh(tipGeo, tipMat);
+    tip.position.copy(end);
+    group.add(tip);
+
+    scene.add(group);
+
+    setTimeout(() => scene.remove(group), 220);
+}
+
+function fireLaser(){
+    if (!player || isAttacking) return;
+    isAttacking = true;
+
+    if (attackAction) {
+        attackAction.setLoop(THREE.LoopOnce, 1);
+        attackAction.clampWhenFinished = true;
+        attackAction.reset();
+        setAction(attackAction, 0.08);
+    }
+
+    const start = player.position.clone().add(new THREE.Vector3(0, 1.55, 0));
+    raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+    const dir = raycaster.ray.direction.clone().normalize();
+
+    const maxDist = 300;
+    let bestDist = maxDist;
+    let hitEnemy = null;
+    let hitPoint = start.clone().add(dir.clone().multiplyScalar(maxDist));
+
+    const mapHit = mapColliders.length ? raycaster.intersectObjects(mapColliders, true)[0] : null;
+    if (mapHit) {
+        const d = mapHit.point.distanceTo(start);
+        if (d < bestDist) {
+            bestDist = d;
+            hitPoint = mapHit.point.clone();
+        }
+    }
+
+    const enemyHit = enemyMeshToRoot.size ? raycaster.intersectObjects(Array.from(enemyMeshToRoot.keys()).map(uuid => {
+        for (const root of enemyRoots) {
+            let found = null;
+            root.traverse(o => { if (o.isMesh && o.uuid === uuid) found = o; });
+            if (found) return found;
+        }
+        return null;
+    }).filter(Boolean), true)[0] : null;
+
+    if (enemyHit) {
+        const d = enemyHit.point.distanceTo(start);
+        if (d < bestDist) {
+            bestDist = d;
+            hitPoint = enemyHit.point.clone();
+            hitEnemy = getEnemyFromHitObject(enemyHit.object);
+        }
+    }
+
+    makeLaserBeam(start, hitPoint);
+
+    if (hitEnemy) {
+        // simple hit reaction: remove the enemy
+        removeEnemy(hitEnemy);
+    }
+
+    setTimeout(() => {
+        isAttacking = false;
+        const moving = Math.abs(moveForward) > 0.05 || Math.abs(moveSide) > 0.05;
+        if (moving && walkAction) setAction(walkAction);
+        else if (idleAction) setAction(idleAction);
+    }, 480);
+}
+
+function getBestPlayerActionFromClips(clips){
+    idleAction = null;
+    walkAction = null;
+    attackAction = null;
+
+    if (!clips || !clips.length || !playerMixer) return;
+
+    const idleClip = pickClip(clips, /idle/i, 0);
+    const walkClip = pickClip(clips, /(walk|run|move)/i, clips.length > 1 ? 1 : 0);
+    const attackClip = pickClip(clips, /(attack|hit|slash|strike|shoot|fire)/i, clips.length > 2 ? 2 : Math.min(2, clips.length - 1));
+
+    if (idleClip) idleAction = playerMixer.clipAction(idleClip);
+    if (walkClip) walkAction = playerMixer.clipAction(walkClip);
+    if (attackClip) attackAction = playerMixer.clipAction(attackClip);
+
+    if (idleAction) {
+        idleAction.play();
+        currentAction = idleAction;
+    } else if (walkAction) {
+        walkAction.play();
+        currentAction = walkAction;
+    } else if (attackAction) {
+        attackAction.play();
+        currentAction = attackAction;
+    }
+}
+
+document.getElementById("startBtn").onclick = async () => {
+    try {
+        if (document.documentElement.requestFullscreen) {
+            await document.documentElement.requestFullscreen().catch(() => {});
+        }
+        if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock("landscape").catch(() => {});
+        }
+    } catch (e) {}
+
+    const mapFile = document.getElementById("mapInput").files[0];
+    const playerFile = document.getElementById("playerInput").files[0];
+    const enemyFile = document.getElementById("enemyInput").files[0];
+    const npcFile = document.getElementById("npcInput").files[0];
+
+    if (!mapFile || !playerFile || !enemyFile || !npcFile) {
+        alert("Upload all GLB files");
+        return;
+    }
+
+    loadingScreen.style.display = "flex";
+    setLoading(0);
+
+    try {
+        const mapGLTF = await loadModel(mapFile);
+        map = mapGLTF.scene;
+        scene.add(map);
+        mapColliders = collectColliders(map);
+        setLoading(20);
+
+        const playerGLTF = await loadModel(playerFile);
+        player = playerGLTF.scene;
+        normalizeCharacterToFeet(player);
+        player.position.set(0, 10, 0);
+        player.rotation.y = Math.PI;
+        scene.add(player);
+
+        playerClips = playerGLTF.animations || [];
+        if (playerClips.length) {
+            playerMixer = new THREE.AnimationMixer(player);
+            getBestPlayerActionFromClips(playerClips);
+        }
+        snapObjectToGround(player);
+        setLoading(40);
+
+        const enemyGLTF = await loadModel(enemyFile);
+        for (let i = 0; i < 5; i++) {
+            const enemy = THREE.SkeletonUtils.clone(enemyGLTF.scene);
+            normalizeCharacterToFeet(enemy);
+            enemy.position.set((Math.random() - 0.5) * 40, 10, (Math.random() - 0.5) * 40);
+            enemy.rotation.y = Math.PI;
+            scene.add(enemy);
+            enemies.push(enemy);
+            enemyRoots.push(enemy);
+            buildEnemyMeshIndex(enemy);
+
+            if (enemyGLTF.animations && enemyGLTF.animations.length > 0) {
+                const mixer = new THREE.AnimationMixer(enemy);
+                mixer.clipAction(enemyGLTF.animations[0]).play();
+                enemyMixers.push(mixer);
+            } else {
+                enemyMixers.push(null);
+            }
+
+            snapObjectToGround(enemy);
+        }
+        setLoading(70);
+
+        const npcGLTF = await loadModel(npcFile);
+        npc = npcGLTF.scene;
+        normalizeCharacterToFeet(npc);
+        npc.position.set(-10, 10, 15);
+        npc.rotation.y = Math.PI;
+        scene.add(npc);
+
+        if (npcGLTF.animations && npcGLTF.animations.length > 0) {
+            npcMixer = new THREE.AnimationMixer(npc);
+            npcMixer.clipAction(npcGLTF.animations[0]).play();
+        }
+        snapObjectToGround(npc);
+        setLoading(100);
+
+        document.getElementById("ui").style.display = "none";
+        setTimeout(() => loadingScreen.style.display = "none", 250);
+    } catch (e) {
+        console.error(e);
+        alert("Error loading GLB files. Check the console.");
+        loadingScreen.style.display = "none";
+    }
 };
 
 function updatePlayer(delta){
+    if (!player) return;
 
-if(!player) return;
+    const movingInput = Math.abs(moveForward) > 0.05 || Math.abs(moveSide) > 0.05;
 
-const speed = 0.14;
+    const speed = 0.14;
+    const forward = new THREE.Vector3(-Math.sin(cameraYaw), 0, -Math.cos(cameraYaw));
+    const right = new THREE.Vector3(Math.cos(cameraYaw), 0, -Math.sin(cameraYaw));
 
-const forward = new THREE.Vector3(
--Math.sin(cameraYaw),
-0,
--Math.cos(cameraYaw)
-);
+    const moveDir = new THREE.Vector3();
+    moveDir.add(forward.clone().multiplyScalar(moveForward));
+    moveDir.add(right.clone().multiplyScalar(moveSide));
 
-const right = new THREE.Vector3(
-Math.cos(cameraYaw),
-0,
--Math.sin(cameraYaw)
-);
+    if (movingInput && !isAttacking) {
+        if (walkAction) setAction(walkAction);
+        moveDir.normalize();
+        player.position.add(moveDir.clone().multiplyScalar(speed));
+        const targetYaw = Math.atan2(moveDir.x, moveDir.z);
+        player.rotation.y += (targetYaw - player.rotation.y) * 0.18;
+    } else if (!isAttacking && idleAction) {
+        setAction(idleAction);
+    }
 
-const moveDir = new THREE.Vector3();
+    velocityY -= 0.015;
+    player.position.y += velocityY;
+    grounded = false;
 
-moveDir.add(forward.clone().multiplyScalar(moveForward));
-moveDir.add(right.clone().multiplyScalar(moveSide));
+    const hit = getGroundHit(player.position.x, player.position.z, player.position.y + 5);
+    if (hit) {
+        const groundY = hit.point.y + footOffset;
+        if (velocityY <= 0 && player.position.y <= groundY + 0.03) {
+            player.position.y = groundY;
+            velocityY = 0;
+            grounded = true;
+        }
+    }
 
-const isMoving = moveDir.lengthSq() > 0.0001;
+    if (player.position.y < -100) {
+        player.position.set(0, 10, 0);
+        velocityY = 0;
+        snapObjectToGround(player);
+    }
 
-if(isMoving && !isAttacking){
+    const camRadius = 4.0;
+    const camHeight = 2.0 + cameraPitch * 3.0;
+    const camPos = new THREE.Vector3(
+        player.position.x + Math.sin(cameraYaw) * camRadius,
+        player.position.y + camHeight,
+        player.position.z + Math.cos(cameraYaw) * camRadius
+    );
+    camera.position.lerp(camPos, 0.12);
+    camera.lookAt(player.position.x, player.position.y + 1.4, player.position.z);
 
-fadeToAction(walkAction);
-
-moveDir.normalize();
-
-player.position.add(moveDir.multiplyScalar(speed));
-
-const targetYaw = Math.atan2(moveDir.x,moveDir.z);
-
-player.rotation.y +=
-(targetYaw - player.rotation.y) * 0.18;
-
-}else if(!isMoving && !isAttacking){
-
-fadeToAction(idleAction);
-
-}
-
-velocityY -= 0.015;
-player.position.y += velocityY;
-
-const hit = getGroundHit(
-player.position.x,
-player.position.z,
-player.position.y + 5
-);
-
-if(hit){
-
-const groundY = hit.point.y + 0.02;
-
-if(player.position.y <= groundY){
-
-player.position.y = groundY;
-velocityY = 0;
-grounded = true;
-
-}
-
-}
-
-const camPos = new THREE.Vector3(
-player.position.x + Math.sin(cameraYaw) * 4,
-player.position.y + 2 + cameraPitch * 3,
-player.position.z + Math.cos(cameraYaw) * 4
-);
-
-camera.position.lerp(camPos,0.1);
-
-camera.lookAt(
-player.position.x,
-player.position.y + 1.5,
-player.position.z
-);
-
-if(playerMixer){
-
-playerMixer.update(delta);
-
-}
+    if (playerMixer) playerMixer.update(delta);
 }
 
 function updateEnemies(delta){
+    if (!player) return;
+    for (let i = 0; i < enemies.length; i++) {
+        const en = enemies[i];
+        const mixer = enemyMixers[i];
+        if (!en) continue;
 
-for(let i=0;i<enemies.length;i++){
+        const dir = new THREE.Vector3().subVectors(player.position, en.position);
+        const dist = dir.length();
 
-const enemy = enemies[i];
+        if (dist > 2) {
+            dir.normalize();
+            en.position.add(dir.multiplyScalar(0.03));
+            en.lookAt(player.position);
+            snapObjectToGround(en);
+        }
 
-const dir = new THREE.Vector3()
-.subVectors(player.position,enemy.position);
-
-const dist = dir.length();
-
-if(dist > 2){
-
-dir.normalize();
-
-enemy.position.add(dir.multiplyScalar(0.03));
-
-enemy.lookAt(player.position);
-
-snapObjectToGround(enemy);
-
+        if (mixer) mixer.update(delta);
+    }
 }
 
-if(enemyMixers[i]){
-
-enemyMixers[i].update(delta);
-
+function updateNPC(delta){
+    if (!npc) return;
+    snapObjectToGround(npc);
+    if (player && npc.position.distanceTo(player.position) < 10) {
+        npc.lookAt(new THREE.Vector3(player.position.x, npc.position.y, player.position.z));
+    }
+    if (npcMixer) npcMixer.update(delta);
 }
-
-}
-}
-
-document.getElementById("jump").onclick = ()=>{
-
-if(grounded){
-
-velocityY = 0.3;
-grounded = false;
-
-}
-
-};
-
-document.getElementById("attack").onclick = ()=>{
-
-if(isAttacking || !attackAction) return;
-
-isAttacking = true;
-
-fadeToAction(attackAction,0.1);
-
-attackAction.setLoop(THREE.LoopOnce);
-attackAction.clampWhenFinished = true;
-
-attackAction.reset();
-attackAction.play();
-
-setTimeout(()=>{
-
-isAttacking = false;
-
-if(moveForward !== 0 || moveSide !== 0){
-
-fadeToAction(walkAction);
-
-}else{
-
-fadeToAction(idleAction);
-
-}
-
-},700);
-
-};
 
 function animate(){
-
-requestAnimationFrame(animate);
-
-const delta = clock.getDelta();
-
-updatePlayer(delta);
-
-if(player){
-
-updateEnemies(delta);
-
+    requestAnimationFrame(animate);
+    const delta = clock.getDelta();
+    updatePlayer(delta);
+    updateEnemies(delta);
+    updateNPC(delta);
+    renderer.render(scene, camera);
 }
-
-renderer.render(scene,camera);
-
-}
-
 animate();
 
-window.addEventListener("resize",()=>{
-
-camera.aspect = window.innerWidth/window.innerHeight;
-camera.updateProjectionMatrix();
-
-renderer.setSize(window.innerWidth,window.innerHeight);
-
+window.addEventListener("resize", () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
 });
 
+document.getElementById("jump").onclick = () => {
+    if (grounded && !isAttacking) {
+        velocityY = 0.3;
+        grounded = false;
+    }
+};
+
+document.getElementById("attack").onclick = fireLaser;
+
+/* Joystick */
 const joystick = document.getElementById("joystick");
 const stick = document.getElementById("stick");
-
 let joyPointerId = null;
+const joyMax = 50;
 
 function resetJoystick(){
-
-moveForward = 0;
-moveSide = 0;
-
-stick.style.left = "40px";
-stick.style.top = "40px";
-
+    moveForward = 0;
+    moveSide = 0;
+    joyPointerId = null;
+    stick.style.left = "40px";
+    stick.style.top = "40px";
 }
 
 function updateJoystick(e){
-
-const rect = joystick.getBoundingClientRect();
-
-let x = e.clientX - rect.left - rect.width/2;
-let y = e.clientY - rect.top - rect.height/2;
-
-const dist = Math.hypot(x,y);
-
-const max = 50;
-
-if(dist > max){
-
-x = (x/dist)*max;
-y = (y/dist)*max;
-
+    const rect = joystick.getBoundingClientRect();
+    let x = e.clientX - rect.left - rect.width / 2;
+    let y = e.clientY - rect.top - rect.height / 2;
+    const dist = Math.hypot(x, y);
+    if (dist > joyMax) {
+        x = (x / dist) * joyMax;
+        y = (y / dist) * joyMax;
+    }
+    stick.style.left = (x + 40) + "px";
+    stick.style.top = (y + 40) + "px";
+    moveSide = x / joyMax;
+    moveForward = -y / joyMax;
 }
 
-stick.style.left = (x+40)+"px";
-stick.style.top = (y+40)+"px";
-
-moveSide = x/max;
-moveForward = -y/max;
-
-}
-
-joystick.addEventListener("pointerdown",e=>{
-
-joyPointerId = e.pointerId;
-
-updateJoystick(e);
-
+joystick.addEventListener("pointerdown", (e) => {
+    joyPointerId = e.pointerId;
+    joystick.setPointerCapture(e.pointerId);
+    updateJoystick(e);
 });
 
-joystick.addEventListener("pointermove",e=>{
-
-if(e.pointerId !== joyPointerId) return;
-
-updateJoystick(e);
-
+joystick.addEventListener("pointermove", (e) => {
+    if (e.pointerId !== joyPointerId) return;
+    updateJoystick(e);
 });
 
-joystick.addEventListener("pointerup",()=>{
-
-resetJoystick();
-
+joystick.addEventListener("pointerup", (e) => {
+    if (e.pointerId !== joyPointerId) return;
+    resetJoystick();
 });
 
+joystick.addEventListener("pointercancel", resetJoystick);
+
+/* Camera drag */
 const cameraPad = document.getElementById("cameraPad");
+let camPointerId = null;
+let lastCamX = 0;
+let lastCamY = 0;
 
-let lastX = 0;
-let lastY = 0;
-let camPointer = null;
-
-cameraPad.addEventListener("pointerdown",e=>{
-
-camPointer = e.pointerId;
-
-lastX = e.clientX;
-lastY = e.clientY;
-
+cameraPad.addEventListener("pointerdown", (e) => {
+    camPointerId = e.pointerId;
+    cameraPad.setPointerCapture(e.pointerId);
+    lastCamX = e.clientX;
+    lastCamY = e.clientY;
 });
 
-cameraPad.addEventListener("pointermove",e=>{
-
-if(e.pointerId !== camPointer) return;
-
-const dx = e.clientX - lastX;
-const dy = e.clientY - lastY;
-
-cameraYaw -= dx * 0.01;
-
-cameraPitch += dy * 0.003;
-
-cameraPitch = Math.max(-0.25,Math.min(0.65,cameraPitch));
-
-lastX = e.clientX;
-lastY = e.clientY;
-
+cameraPad.addEventListener("pointermove", (e) => {
+    if (e.pointerId !== camPointerId) return;
+    const dx = e.clientX - lastCamX;
+    const dy = e.clientY - lastCamY;
+    cameraYaw -= dx * 0.01;
+    cameraPitch += dy * 0.003;
+    cameraPitch = Math.max(-0.25, Math.min(0.65, cameraPitch));
+    lastCamX = e.clientX;
+    lastCamY = e.clientY;
 });
 
+cameraPad.addEventListener("pointerup", (e) => {
+    if (e.pointerId === camPointerId) camPointerId = null;
+});
+
+cameraPad.addEventListener("pointercancel", () => {
+    camPointerId = null;
+});
 </script>
-
 </body>
 </html>
